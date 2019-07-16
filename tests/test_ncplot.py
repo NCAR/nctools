@@ -26,6 +26,7 @@ class TaskNcPlotTests(unittest.TestCase):
 
         self.ncplot_argv = [
             "--debug",
+            "--noshow",
             "--save", "'%s'" % imgfile
         ]
 
@@ -95,9 +96,10 @@ class TaskNcPlotTests(unittest.TestCase):
         retval, forward = pyloco.perform(ncplot, argv, forward=forward)
         self._default_assert(retval)
 
-    def test_multiproc(self):
+    def test_clone(self):
 
-        argv = ["--multiproc", "3", "--clone", "[1,1,1]"]
+        #argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
+        argv = ["--clone", "[1,1,1]"]
         subargv = [ncread, datafile, "-v", "ua", "--import", nctoolsutil, "--",
                 ncplot, "-p", "lon[:],lat[:],ua[0,0,:,:]@plot_contourf", "--noshow", "-s",
                    "'cont%d.png'%_pathid_", "-t", "ua.original_name + ua.units"]

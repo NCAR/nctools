@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import netCDF4
 import pyloco
 
@@ -172,7 +173,11 @@ Examples
 
     def perform(self, targs):
 
-        rootgrp = netCDF4.Dataset(targs.data, "r")
+        if isinstance(targs.data, str) and os.path.isfile(targs.data):
+            rootgrp = netCDF4.Dataset(targs.data, "r")
+
+        else:
+            raise Exception("Specified input is not correct: %s" % str(targs.data)) 
 
         if targs.list:
             attrs = {"verbose": False}

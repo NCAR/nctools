@@ -113,5 +113,6 @@ ncv:
 	pyloco nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -i ua
 
 plot:
-	pyloco nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -v ua -- nctools/plot/ncplot.py -p 'lon,lat,ua@contourf' -s cont1.png -t 'ua.long_name'
-	xdg-open cont1.png
+	pyloco nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -v ua -- nctools/plot/ncplot/ncplot.py -p 'lon[:],lat[:],ua[0,0,:,:]@contourf' -s '"cont1.png"' -t 'ua.long_name' --noshow
+	#xdg-open cont1.png
+	open cont1.png

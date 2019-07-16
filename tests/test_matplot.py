@@ -11,7 +11,8 @@ import pyloco
 here, myname = os.path.split(__file__)
 datadir = os.path.join(here, "data")
 rootdir = os.path.realpath(os.path.join(here, ".."))
-matplot = os.path.join(rootdir, "nctools", "plot", "matplot", "matplot.py")
+#matplot = os.path.join(rootdir, "nctools", "plot", "matplot", "matplot.py")
+matplot = "matplot"
 imgfile = os.path.join(datadir, "img.png")
 
 class TaskMatplotTests(unittest.TestCase):
@@ -92,19 +93,22 @@ class TaskMatplotTests(unittest.TestCase):
 
     def test_clone(self):
 
+            #"--multiproc", "2,spawn",
         argv = [
             "--log", "clonetest.log",
-            "--multiproc", "2",
             "--clone", "[[1,2,3],[3,5,2]]"
         ]
 
-        subargv = [matplot] + self.argv + [
+        newargv = list(self.argv)
+        idx = newargv.index("--save")
+        newargv.pop(idx+1)
+        newargv.pop(idx)
+        subargv = [matplot] + newargv + [
             "--save", "'%d.png'%_pathid_",
         ]
 
         retval, forward = pyloco.perform("", argv, subargv)
 
-        #import pdb; pdb.set_trace()
         self.assertEqual(retval, 0)
         self.assertTrue(os.path.exists("0.png"))
         os.remove("0.png")
@@ -128,12 +132,12 @@ class TaskMatplotTests(unittest.TestCase):
 
     def test_pickle(self):
 
-        picklefile = os.path.join(datadir, "netcdfread.ppf")
+        picklefile = os.path.join(datadir, "test.ppf")
 
         argv = self.argv + [
             "--read-pickle", picklefile,
             "--subplot", "111@ax",
-            "--plot", "_{data[0]:arg}_['variables']['lat']['data']@plot",
+            "--plot", "_{data[0]['dims']['lat']['variable']['data'][:]:arg}_@plot",
         ]
 
         retval, forward = pyloco.perform(matplot, argv)

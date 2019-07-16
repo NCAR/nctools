@@ -10,7 +10,7 @@ def nctools_unittest_suite():
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
 
-    all_tests = task_ncplots + task_netcdfs + task_matplots
+    all_tests = task_netcdfs + task_matplots + task_ncplots
 
     for test_class in all_tests:
         tests = loader.loadTestsFromTestCase(test_class)
