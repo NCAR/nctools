@@ -23,9 +23,9 @@ class TaskNcReadTests(unittest.TestCase):
 
     def test_read(self):
 
-        argv = [datafile, "-v", "/pr"]
+        argv = ["ncread", datafile, "-v", "/pr"]
 
-        retval, forward = nctools.perform("ncread", argv)
+        retval, forward = nctools.main(argv)
 
         self.assertEqual(retval, 0)
         self.assertIn("data", forward)

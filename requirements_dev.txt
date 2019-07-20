@@ -1,0 +1,14 @@
+coverage
+flake8
+pip
+setuptools
+Sphinx
+sphinx-rtd-theme
+tox
+twine
+wheel
+typing
+ushlex
+websocket-client
+SimpleWebSocketServer
+virtualenv
