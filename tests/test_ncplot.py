@@ -42,6 +42,16 @@ class TaskNcPlotTests(unittest.TestCase):
         self.assertEqual(retval, 0)
         self.assertTrue(os.path.exists(imgfile))
 
+    def test_inputcontour(self):
+
+        argv = self.ncplot_argv + [
+                "%s:/pr" % datafile,
+                "-p", "lon[:],lat[:],pr[0,:,:]@plot_contour",
+        ]
+
+        retval, forward = pyloco.perform("ncplot", argv)
+        self._default_assert(retval)
+
     def test_contour(self):
 
         argv = [datafile, "-v", "/pr"]
@@ -93,8 +103,8 @@ class TaskNcPlotTests(unittest.TestCase):
 
     def test_clone(self):
 
-        #argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
-        argv = ["--clone", "[1,1,1]"]
+        argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
+        #argv = ["--clone", "[1,1,1]"]
         subargv = ["ncread", datafile, "-v", "ua", "--",
                 "ncplot", "-p", "lon[:],lat[:],ua[0,0,:,:]@plot_contourf", "--noshow", "-s",
                    "'cont%d.png'%_pathid_", "-t", "ua.original_name + ua.units"]

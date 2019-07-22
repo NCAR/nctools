@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import pyloco
 from nctools.ncutil import GroupProxy, DimProxy, VarProxy
 
@@ -24,6 +25,16 @@ Examples
                 help="data input in NetCDF-dictionary format")
 
     def pre_perform(self, targs):
+
+        if isinstance(targs.data, str):
+            filepath, varpath = targs.data.split(":", 1)
+
+            if not os.path.isfile(filepath):
+                raise Exception("'%s' is not correct file path." % filepath)
+
+            argv = [filepath, "-v", varpath]
+            retval, forward = pyloco.perform("ncread", argv=argv)
+            targs.data = forward["data"] 
 
         for k, g in targs.data["groups"].items():
             self._env[k] = GroupProxy(g)
