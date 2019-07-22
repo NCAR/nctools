@@ -12,6 +12,7 @@ def traverse(group, indata, outdata, parent_group=None,
 
     if F4: F4(group, indata, outdata, parent_group)
 
+
 def get_var(group, name):
 
     def _get_variables(group, varpaths, outdata, parent_group):
@@ -27,6 +28,7 @@ def get_var(group, name):
     traverse(group, indata, outdata, F1=_get_variables)
     return outdata[outvar]
 
+
 def get_dim(group, name):
 
     def _get_dimension(group, dimpaths, outdata, parent_group):
@@ -41,37 +43,6 @@ def get_dim(group, name):
     indata, outdata = [outdim], {}
     traverse(group, indata, outdata, F1=_get_dimension)
     return outdata[outdim]
-
-#def get_slice_from_dims(var, dims):
-#
-#    slices = []
-#    order = {}
-#    invorder = {}
-#
-#    for dname in var["dimensions"]:
-#        if dname in dims:
-#            slices.append(":")
-#            order[dname] = len(order)
-#            invorder[order[dname]] = dname
-#
-#        else:
-#            slices.append("0")
-#
-#    # TODO : change order of dimension
-#    sliced = eval("var['data'][%s]" % ",".join(slices))
-#
-#    for idx, dim in enumerate(dims):
-#        if order[dim] != idx:
-#            cidx = order[dim]
-#            sliced = numpy.swapaxes(sliced, cidx, idx)
-#            cdim = invorder[idx]
-#
-#            order[dim] = idx
-#            order[cdim] = cidx
-#            invorder[idx] = dim
-#            invorder[cidx] = cdim
-#
-#    return sliced
 
 
 class ProxyBase(object):
@@ -102,6 +73,14 @@ class VarProxy(ProxyBase):
         else:
             return self._data["data"][key]
 
+    def __setitem__(self, key, value):
+
+        if key == slice(None, None, None):
+            self._data["data"] = value
+
+        else:
+            raise Exception("Unsupported slicing")
+
 
 class DimProxy(ProxyBase):
 
@@ -112,6 +91,14 @@ class DimProxy(ProxyBase):
 
         else:
             return self._data["variable"]["data"][key]
+
+    def __setitem__(self, key, value):
+
+        if key == slice(None, None, None):
+            self._data["variable"]["data"] = value
+
+        else:
+            raise Exception("Unsupported slicing")
 
 
 class GroupProxy(ProxyBase):
