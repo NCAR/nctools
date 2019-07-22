@@ -11,11 +11,7 @@ import pyloco
 here, myname = os.path.split(__file__)
 datadir = os.path.join(here, "data")
 rootdir = os.path.realpath(os.path.join(here, ".."))
-ncplot = os.path.join(rootdir, "nctools", "plot", "ncplot", "ncplot.py")
 imgfile = os.path.join(datadir, "img.png")
-
-ncread = os.path.join(rootdir, "nctools", "data", "ncread.py")
-nctoolsutil = os.path.join(rootdir, "nctools", "core", "nctools_util.py")
 datafile = os.path.join(datadir, "sresa1b_ncar_ccsm3-example.nc")
 
 class TaskNcPlotTests(unittest.TestCase):
@@ -48,9 +44,9 @@ class TaskNcPlotTests(unittest.TestCase):
 
     def test_contour(self):
 
-        argv = [datafile, "-v", "/pr", "--import", nctoolsutil]
+        argv = [datafile, "-v", "/pr"]
 
-        retval, forward = pyloco.perform(ncread, argv)
+        retval, forward = pyloco.perform("ncread", argv)
 
         self.assertEqual(retval, 0)
         self.assertIn("data", forward)
@@ -67,15 +63,14 @@ class TaskNcPlotTests(unittest.TestCase):
             "data": forward["data"]
         }
 
-        retval, forward = pyloco.perform(ncplot, argv, forward=forward)
-
+        retval, forward = pyloco.perform("ncplot", argv, forward=forward)
         self._default_assert(retval)
 
     def test_contour_rotate(self):
 
-        argv = [datafile, "-v", "/pr", "--import", nctoolsutil]
+        argv = [datafile, "-v", "/pr"]
 
-        retval, forward = pyloco.perform(ncread, argv)
+        retval, forward = pyloco.perform("ncread", argv)
 
         self.assertEqual(retval, 0)
         self.assertIn("data", forward)
@@ -93,15 +88,15 @@ class TaskNcPlotTests(unittest.TestCase):
             "data": forward["data"]
         }
 
-        retval, forward = pyloco.perform(ncplot, argv, forward=forward)
+        retval, forward = pyloco.perform("ncplot", argv, forward=forward)
         self._default_assert(retval)
 
     def test_clone(self):
 
         #argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
         argv = ["--clone", "[1,1,1]"]
-        subargv = [ncread, datafile, "-v", "ua", "--import", nctoolsutil, "--",
-                ncplot, "-p", "lon[:],lat[:],ua[0,0,:,:]@plot_contourf", "--noshow", "-s",
+        subargv = ["ncread", datafile, "-v", "ua", "--",
+                "ncplot", "-p", "lon[:],lat[:],ua[0,0,:,:]@plot_contourf", "--noshow", "-s",
                    "'cont%d.png'%_pathid_", "-t", "ua.original_name + ua.units"]
 
         retval, forward = pyloco.perform("", argv, subargv)
@@ -116,9 +111,9 @@ class TaskNcPlotTests(unittest.TestCase):
 
     def test_nodim(self):
 
-        argv = [datafile, "-v", "/pr", "--import", nctoolsutil]
+        argv = [datafile, "-v", "/pr"]
 
-        retval, forward = pyloco.perform(ncread, argv)
+        retval, forward = pyloco.perform("ncread", argv)
 
         self.assertEqual(retval, 0)
         self.assertIn("data", forward)
@@ -135,7 +130,7 @@ class TaskNcPlotTests(unittest.TestCase):
             "data": forward["data"]
         }
 
-        retval, forward = pyloco.perform(ncplot, argv, forward=forward)
+        retval, forward = pyloco.perform("ncplot", argv, forward=forward)
 
         self._default_assert(retval)
 

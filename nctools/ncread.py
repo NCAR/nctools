@@ -28,7 +28,7 @@ Examples
 """
     _name_ = "ncread"
     _version_ = "0.1.0"
-    _install_requires = ["netCDF4", "nctools_util"]
+    _install_requires = ["netCDF4"]
 
     def __init__(self, parent):
 
