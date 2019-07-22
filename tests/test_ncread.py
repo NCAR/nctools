@@ -12,48 +12,42 @@ here, myname = os.path.split(__file__)
 datadir = os.path.join(here, "data")
 rootdir = os.path.realpath(os.path.join(here, ".."))
 datafile = os.path.join(datadir, "sresa1b_ncar_ccsm3-example.nc")
+testppf= os.path.join(datadir, "test.ppf")
 
 class TaskNcReadTests(unittest.TestCase):
 
     def setUp(self):
-        pass
+        if os.path.exists(testppf):
+            os.remove(testppf)
 
     def tearDown(self):
-        pass
+        if os.path.exists(testppf):
+            os.remove(testppf)
 
     def test_read(self):
 
-        argv = ["ncread", datafile, "-v", "/pr"]
+        argv = ["ncread", datafile, "-v", "/pr", "--write-pickle", testppf]
 
-        retval, forward = nctools.main(argv)
+        retval = nctools.main(argv)
 
         self.assertEqual(retval, 0)
-        self.assertIn("data", forward)
-        self.assertIn("dims", forward["data"])
-        self.assertIn("vars", forward["data"])
-        self.assertIn("groups", forward["data"])
+        self.assertTrue(testppf)
 
 
-#    def test_pickle(self):
-#
-#        # data source : https://www.unidata.ucar.edu/software/netcdf/examples/sresa1b_ncar_ccsm3-example.nc
-#        picklefile = os.path.join(datadir, "test.ppf")
-#
-#        argv = [datafile, "--write-pickle", picklefile, "-v", "/pr", "--import", nctoolsutil]
-#
-#        retval, forward = pyloco.perform(ncread, argv)
-#
-#        self.assertEqual(retval, 0)
-#        self.assertIn("data", forward)
-#        self.assertIn("dims", forward["data"])
-#        self.assertIn("vars", forward["data"])
-#        self.assertIn("groups", forward["data"])
-#
-#        argv = ["--read-pickle", picklefile, "--forward", "data=list(_{data[0]:arg}_['dims'].keys())"]
-#        retval, forward = pyloco.perform("input", argv)
-#
-#        self.assertEqual(retval, 0)
-#        self.assertIn("data", forward)
-#        self.assertEqual(forward["data"], ['lat', 'lon', 'bnds', 'plev', 'time'])
+    def test_pickle(self):
+
+
+        argv = ["ncread", datafile, "--write-pickle", testppf, "-v", "/pr"]
+
+        retval = nctools.main(argv)
+
+        self.assertEqual(retval, 0)
+        self.assertTrue(testppf)
+
+        argv = ["input", "--read-pickle", testppf, "--assert-input", "'dims' in data[0]"]
+        retval = nctools.main(argv)
+
+        self.assertEqual(retval, 0)
+
 
 test_classes = (TaskNcReadTests,)
