@@ -28,7 +28,7 @@ Examples
 """
     _name_ = "ncread"
     _version_ = "0.1.0"
-    _install_requires = ["netCDF4"]
+    _install_requires = ["netCDF4", "nctools_util"]
 
     def __init__(self, parent):
 
@@ -144,13 +144,14 @@ Examples
 
         if F4: F4(group, indata, outdata, parent_group)
 
-    def _desc_vars(self, group, indata, outdata, parent_group):
+    def _desc_group(self, group, indata, outdata, parent_group):
 
         dimnames = group.dimensions.keys()
 
         if "only" in indata and group.path in indata["only"]:
             print(group)
 
+        print("***** variables *******")
         for varname in group.variables.keys():
             if varname in dimnames:
                 continue
@@ -168,6 +169,30 @@ Examples
                             print("    - %s: %s" % (_n, str(_a)))
                     print("")
 
+        if "verbose" in indata and indata["verbose"]:
+            print("***** dimensions *******")
+            for dimname, dimobj in group.dimensions.items():
+                print("    - %s: name=%s, size=%d, isunlimited=%s" %
+                    (dimname, dimobj.name, dimobj.size, str(dimobj.isunlimited())))
+            print("")
+
+        print("***** attributes *******")
+        for attr in dir(group):
+            if attr.startswith("_") or attr in ("variables", "dimensions"):
+                continue
+
+            val = getattr(group, attr)
+
+            if callable(val):
+                continue
+
+            text = str(val)
+            if len(text) > 50:
+                print("%s : %s..."%(group.path+attr, text[:50]))
+
+            else:
+                print("%s : %s"%(group.path+attr, text))
+
     def _desc_path(self, group, outdata, parent_group):
         print("\n[%s]" % group.path)
 
@@ -181,12 +206,12 @@ Examples
 
         if targs.list:
             attrs = {"verbose": False}
-            self.traverse(rootgrp, attrs, {}, F1=self._desc_vars, F2=self._desc_path)
+            self.traverse(rootgrp, attrs, {}, F1=self._desc_group, F2=self._desc_path)
 
         if targs.info:
             info = [normpath(s, type=None) for s in targs.info]
             attrs = {"verbose": True, "only": info}
-            self.traverse(rootgrp, attrs, {}, F1=self._desc_vars, F2=self._desc_path)
+            self.traverse(rootgrp, attrs, {}, F1=self._desc_group, F2=self._desc_path)
 
         indata = {}
         outdata = {}
