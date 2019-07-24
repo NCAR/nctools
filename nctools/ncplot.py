@@ -14,7 +14,7 @@ Examples
 ---------
 """
     _name_ = "ncplot"
-    _version_ = "0.1.0"
+    _version_ = "0.1.1"
     _install_requires = ["matplot"]
 
     def __init__(self, parent):
