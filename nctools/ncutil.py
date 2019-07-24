@@ -1,5 +1,38 @@
 # -*- coding: utf-8 -*-
-  
+
+
+MAXWIDTH = 50
+
+def _truncate(name, obj):
+
+    text = str(obj)
+
+    if len(text) > MAXWIDTH:
+        outtext =(name, "%s..."%text[:MAXWIDTH])
+
+    else:
+        outtext = (name, text)
+
+    return outtext
+
+
+def _pack(lines):
+
+    packed = []
+    maxprefix = 0
+
+    for prefix, text in lines:
+        maxprefix = max(len(prefix), maxprefix)
+
+    for prefix, text in lines:
+        if prefix:
+            packed.append(prefix+" "*(maxprefix-len(prefix)+1)+text)
+
+        else:
+            packed.append(text)
+
+    return "\n".join(packed)
+
 def traverse(group, indata, outdata, parent_group=None,
              F1=None, F2=None, F3=None, F4=None):
 
@@ -44,6 +77,55 @@ def get_dim(group, name):
     traverse(group, indata, outdata, F1=_get_dimension)
     return outdata[outdim]
 
+def desc_group(group, indata, outdata, parent_group):
+
+
+    dimnames = list(group["dims"].keys())
+    gpath = group["path"]
+    lines = []
+
+    lines.append(("", "\n***** variables in group '%s' *****" % gpath))
+
+    for varname in group["vars"].keys():
+        if varname in dimnames:
+            continue
+
+        if "only" not in indata or gpath+varname in indata["only"]:
+            var = group["vars"][varname]
+            dims = ["%s:%d"%d for d in zip(var["dimensions"], var["data"].shape)]
+            lines.append((varname, "(%s) %s" % (", ".join(dims), str(var["data"].dtype))))
+
+            if "verbose" in indata and indata["verbose"]:
+                for n, a in var.items():
+                    if not n.startswith("_") and n not in ("data",):
+                        lines.append(("   - %s: " % n, str(a)))
+                lines.append(("", ""))
+
+    if "verbose" in indata and indata["verbose"]:
+        lines.append(("", "\n***** dimensions in group '%s' *****" % gpath))
+        for dimname, dimobj in group["dims"].items():
+            lines.append((dimname, "name=%s, size=%d, isunlimited=%s" %
+                (dimname, dimobj["size"], str(dimobj["isunlimited"]))))
+        lines.append(("", ""))
+
+    if "only" not in indata:
+        lines.append(("", "\n***** attributes in group '%s' *****" % gpath))
+
+        for attrname, attrobj in group.items():
+            if attrname.startswith("_") or attrname in ("vars", "dims", "groups"):
+                continue
+
+            if attrname == "ncattrs":
+                for ncattrname, ncattrobj in attrobj.items():
+                    lines.append(_truncate(ncattrname, ncattrobj))
+
+            else:
+                lines.append(_truncate(attrname, attrobj))
+
+    print(_pack(lines))
+
+#def desc_path(group, outdata, parent_group):
+#    print("\n[%s]" % group["path"])
 
 class ProxyBase(object):
 
@@ -61,6 +143,24 @@ class ProxyBase(object):
 
         raise AttributeError("'%s' object has no attribute '%s'" %
                              (self.__class__.__name__, attr))
+
+    def dump(self, namepath):
+
+        if namepath:
+            name = namepath[0]
+            obj = getattr(self, name, None)
+
+            if obj is None:
+                print("ERROR: could not find any item specified by '%s'." % ".".join(namepath))
+
+            elif isinstance(obj, ProxyBase):
+                namepath.pop(0)
+                return obj.dump(namepath)
+        
+            else:
+                return str(obj)
+        else:
+            return str(self)
 
 
 class VarProxy(ProxyBase):
@@ -81,7 +181,23 @@ class VarProxy(ProxyBase):
         else:
             raise Exception("Unsupported slicing")
 
+    def __str__(self):
 
+        lines = []
+
+        lines.append(_truncate("", "\n**** variable attributes ****"))
+
+        for attr, value in self._data.items():
+            if attr == "data":
+                continue
+
+            lines.append(_truncate(attr, str(value)))
+
+        lines.append(_truncate("", "\n**** variable data ****\n"))
+        packed = _pack(lines)
+
+        return packed + str(self._data["data"])
+        
 class DimProxy(ProxyBase):
 
     def __getitem__(self, key):
@@ -100,6 +216,23 @@ class DimProxy(ProxyBase):
         else:
             raise Exception("Unsupported slicing")
 
+    def __str__(self):
+
+        lines = []
+
+        lines.append(_truncate("", "\n**** dimension attributes ****"))
+
+        for attr, value in self._data.items():
+            if attr == "variable":
+                continue
+
+            lines.append(_truncate(attr, str(value)))
+
+        packed = _pack(lines)
+
+        varobj = VarProxy(self._data["variable"])
+
+        return packed + "\n" + str(varobj)
 
 class GroupProxy(ProxyBase):
 
@@ -114,8 +247,45 @@ class GroupProxy(ProxyBase):
         elif attr in self._data and attr not in ("vars", "dims", "groups"):
             return self._data[attr]
 
+        elif "ncattrs" in self._data and attr in self._data["ncattrs"]:
+            return self._data["ncattrs"][attr]
+
         elif attr in self._data["groups"]:
             return GroupProxy(self._data["groups"][attr])
 
         else:
             raise AttributeError("'GroupProxy' object has no attribute '%s'" % attr)
+
+    def __str__(self):
+
+        lines = []
+
+        lines.append(_truncate("", "\n**** group attributes ****"))
+
+        for attr, value in self._data.items():
+            if attr in ("vars", "dims", "groups"):
+                continue
+
+            if attr == "ncattrs":
+                for _n, _v in self._data["ncattrs"].items():
+                    lines.append(_truncate(_n, str(_v)))
+            else:
+                lines.append(_truncate(attr, str(value)))
+
+        packed = _pack(lines)
+        varlines = []
+        dimlines = []
+        grouplines = []
+
+        for vname, vobj in self._data["vars"].items():
+            varlines.append(str(VarProxy(vobj)))
+
+        for dname, dobj in self._data["dims"].items():
+            dimlines.append(str(DimProxy(dobj)))
+
+        for gname, gobj in self._data["groups"].items():
+            grouplines.append(str(GroupProxy(gobj)))
+
+        return (packed + "\n" + "\n".join(varlines) + "\n".join(dimlines) +
+                "\n".join(grouplines))
+

@@ -1,15 +1,28 @@
+#
+#class Manager(object):
+#    pass
+#
+#def collect_attrs(filename, clsname):
+#
+#    class 
+#    with open(file) as f:
+#        l = {"pyloco": __dir__}
+#        exec(f, globals(), lo
 
 def main():
 
     from setuptools import setup, find_packages
     from setuptools.command.develop import develop
     from setuptools.command.install import install
-    from subprocess import check_call
 
     import sys
     import os
-    import pyloco
     from nctools.main import NcTools as mgr
+
+    # TODO: do not import mgr because it causes to import pyloco
+    # TODO: use ast??? with "class NcTools" input?
+
+    mgr = collect_attrs("NcTools")
 
     here = os.path.dirname(os.path.abspath(__file__))
     default_tasks = ("matplot", "ncread", "ncplot")
@@ -17,6 +30,7 @@ def main():
     class PostCommand(object):
 
         def _isinstalled(self, task):
+            import pyloco
             fout = open(os.devnull,"w"); ferr = open(os.devnull,"w")
             stdout = sys.stdout; stderr = sys.stderr
             sys.stdout = fout; sys.stderr = ferr;
@@ -25,14 +39,13 @@ def main():
             return ret == 0
 
         def _install_task(self, task):
+            import pyloco
             if not self._isinstalled(task):
                 ret, _ = pyloco.perform("install", [task])
                 if ret != 0:
                     print("'%s' is not installed" % task)
 
         def _pyloco_install(self):
-
-            ret = 0
 
             try:
                 for task in default_tasks:
@@ -42,11 +55,13 @@ def main():
                 print("nctools installation failed: %s" % str(err))
 
     class PostDevelopCommand(PostCommand, develop):
+
         def run(self):
             develop.run(self)
             self._pyloco_install()
 
     class PostInstallCommand(PostCommand, install):
+
         def run(self):
             install.run(self)
             self._pyloco_install()

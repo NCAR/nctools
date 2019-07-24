@@ -4,6 +4,8 @@ import os
 import netCDF4
 import pyloco
 
+from ncutil import traverse, desc_group
+
 def normpath(path, type=None):
 
     split = [p.strip() for p in path.split("/") if p.strip()]
@@ -27,7 +29,7 @@ Examples
 ---------
 """
     _name_ = "ncread"
-    _version_ = "0.1.1"
+    _version_ = "0.1.2"
     _install_requires = ["netCDF4"]
 
     def __init__(self, parent):
@@ -144,58 +146,6 @@ Examples
 
         if F4: F4(group, indata, outdata, parent_group)
 
-    def _desc_group(self, group, indata, outdata, parent_group):
-
-        dimnames = group.dimensions.keys()
-
-        if "only" in indata and group.path in indata["only"]:
-            print(group)
-
-        print("***** variables *******")
-        for varname in group.variables.keys():
-            if varname in dimnames:
-                continue
-
-            if "only" not in indata or group.path+varname in indata["only"]:
-                var = group.variables[varname]
-                dims = ["%s:%d"%d for d in zip(var.dimensions, var.shape)]
-                print("%s :\t(%s) %s"%(group.path+var.name, ", ".join(dims), str(var.dtype)))
-
-                if "verbose" in indata and indata["verbose"]:
-                    for _n in dir(var):
-                        _a = getattr(var, _n)
-
-                        if not _n.startswith("_") and not callable(_a):
-                            print("    - %s: %s" % (_n, str(_a)))
-                    print("")
-
-        if "verbose" in indata and indata["verbose"]:
-            print("***** dimensions *******")
-            for dimname, dimobj in group.dimensions.items():
-                print("    - %s: name=%s, size=%d, isunlimited=%s" %
-                    (dimname, dimobj.name, dimobj.size, str(dimobj.isunlimited())))
-            print("")
-
-        print("***** attributes *******")
-        for attr in dir(group):
-            if attr.startswith("_") or attr in ("variables", "dimensions"):
-                continue
-
-            val = getattr(group, attr)
-
-            if callable(val):
-                continue
-
-            text = str(val)
-            if len(text) > 50:
-                print("%s : %s..."%(group.path+attr, text[:50]))
-
-            else:
-                print("%s : %s"%(group.path+attr, text))
-
-    def _desc_path(self, group, outdata, parent_group):
-        print("\n[%s]" % group.path)
-
     def perform(self, targs):
 
         if isinstance(targs.data, str) and os.path.isfile(targs.data):
@@ -204,25 +154,33 @@ Examples
         else:
             raise Exception("Specified input is not correct: %s" % str(targs.data)) 
 
+        indata = {}
+        outdata = {}
+
+        objs = []
+
+        if targs.variable:
+            objs.extend([normpath(s, type="variable") for s in targs.variable])
+
+        if targs.info:
+            for i in targs.info:
+                obj = normpath(i, type=None) 
+                if obj not in objs:
+                    objs.append(obj)
+
+        if objs:
+            indata["only"] = objs
+
+        self.traverse(rootgrp, indata, outdata, F1=self._collect_group,
+                      F2=self._get_groupdict)
+
         if targs.list:
             attrs = {"verbose": False}
-            self.traverse(rootgrp, attrs, {}, F1=self._desc_group, F2=self._desc_path)
+            traverse(outdata, attrs, {}, F1=desc_group)
 
         if targs.info:
             info = [normpath(s, type=None) for s in targs.info]
             attrs = {"verbose": True, "only": info}
-            self.traverse(rootgrp, attrs, {}, F1=self._desc_group, F2=self._desc_path)
-
-        indata = {}
-        outdata = {}
-
-        if targs.variable:
-            variables = [normpath(s, type="variable") for s in targs.variable]
-            indata["only"] = variables
-            self.traverse(rootgrp, indata, outdata, F1=self._collect_group,
-                          F2=self._get_groupdict)
-        else:
-            self.traverse(rootgrp, indata, outdata, F1=self._collect_group,
-                          F2=self._get_groupdict)
+            traverse(outdata, attrs, {}, F1=desc_group)
 
         self.add_forward(data=outdata)
