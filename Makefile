@@ -1,7 +1,6 @@
 NAME := nctools
-DOCREPO := ../nctoolsdoc
 
-.PHONY: clean clean-test clean-pyc clean-build docs help
+.PHONY: clean clean-test clean-pyc clean-build doc help
 .DEFAULT_GOAL := help
 
 define BROWSER_PYSCRIPT
@@ -29,6 +28,14 @@ export PRINT_HELP_PYSCRIPT
 
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
+SHAREDIR := /media/sf_VM-Shared
+SHAREWORK := ${SHAREDIR}/${NAME}
+
+cp2win:
+	rm -rf ${SHAREWORK}/*
+	mkdir -p ${SHAREWORK}
+	cp -rf doc Makefile ${NAME} setup.py tests example tox.ini ${SHAREWORK}
+
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
@@ -39,12 +46,12 @@ clean-build: ## remove build artifacts
 	rm -fr dist/
 	rm -fr .eggs/
 	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -fr {} +
+	find . -name '*.egg' -exec rm -rf {} +
 
 clean-pyc: ## remove Python file artifacts
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
+	find . -name '*.pyc' -exec rm -rf {} +
+	find . -name '*.pyo' -exec rm -rf {} +
+	find . -name '*~' -exec rm -rf {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 
 clean-test: ## remove test and coverage artifacts
@@ -65,29 +72,26 @@ test-admin: ## run tests on admin tasks
 	$(MAKE) -C tests -f admin_task_tests.mak
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source ${NAME} -m unittest
+	#coverage run --source ${NAME} -m unittest
+	coverage run --source ${NAME} setup.py test
 	coverage report -m
 	#coverage html
 	#$(BROWSER) htmlcov/index.html
 
-docs: ## generate Sphinx HTML docsumentation, including API docs
-	rm -f docs/${NAME}.rst
-	rm -f docs/modules.rst
-	#sphinx-apidocs -o docs/ ${NAME}
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	$(BROWSER) docs/build/html/index.html
+doc: ## generate Sphinx HTML docsumentation, including API docs
+	rm -f doc/${NAME}.rst
+	rm -f doc/modules.rst
+	#sphinx-apidocs -o doc/ ${NAME}
+	nctools doc/gencmddoc.plx 
+	$(MAKE) -C doc clean
+	$(MAKE) -C doc html
+	$(BROWSER) doc/build/html/index.html
 
-pushdoc: docs
-	cp -rf docs/build/html/. ${DOCREPO}
-	cd ${DOCREPO}; git add . ; git commit -m "pushed new updates"; git push origin master
-	
-servedoc: docs ## compile the docss watching for changes
-	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
+servedoc: doc ## compile the docss watching for changes
+	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C doc html' -R -D .
 
 release: dist ## package and upload a release
 	twine upload dist/*
-	#/Users/youngsun/Library/Python/2.7/bin/twine upload dist/*
 
 dist: clean ## builds source and wheel package
 	python setup.py sdist
@@ -99,20 +103,5 @@ install: clean ## install the package to the active Python's site-packages
 
 dev-install: clean ## install the package locally
 	python setup.py develop
-	#python setup.py develop --user --user is not work with virtualenv
+	#python setup.py develop --user
 
-####### NOTES #######
-
-# >>> pip install Sphinx
-# >>> pip install sphinx_rtd_theme
-#
-ncl:
-	pyloco nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -l
-
-ncv:
-	pyloco nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -i ua
-
-plot:
-	pyloco nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -v ua -- nctools/plot/ncplot/ncplot.py -p 'lon[:],lat[:],ua[0,0,:,:]@contourf' -s '"cont1.png"' -t 'ua.long_name' --noshow
-	#xdg-open cont1.png
-	open cont1.png

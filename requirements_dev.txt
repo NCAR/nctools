@@ -12,3 +12,7 @@ ushlex
 websocket-client
 SimpleWebSocketServer
 virtualenv
+pyloco
+numpy
+netCDF4
+matplotlib

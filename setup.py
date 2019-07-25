@@ -97,15 +97,15 @@ def main():
     setup(
         name=mgr.get("_name_"),
         version=mgr.get("_version_"),
-        description=mgr.get("_description_", "description is not specified."),
-        long_description=mgr.get("_long_description_", "long description is not specified"),
-        author=mgr.get("_author_", "author is not specified"),
-        author_email=mgr.get("_author_email_", "author email is not specified"),
-        license=mgr.get("_license_", "license is not specified"),
+        description=mgr.get("_description_", None),
+        long_description=mgr.get("_long_description_", None),
+        author=mgr.get("_author_", None),
+        author_email=mgr.get("_author_email_", None),
+        license=mgr.get("_license_", None),
         packages=find_packages(),
         test_suite="tests.nctools_unittest_suite",
         install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"],
-        url=mgr.get("_url_", "url is not specified"),
+        url=mgr.get("_url_", None),
         entry_points={
             'console_scripts': [
                 'nctools = nctools.__main__:main'
@@ -115,11 +115,11 @@ def main():
             'develop': PostDevelopCommand,
             'install': PostInstallCommand,
         },
+            #'License :: OSI Approved :: %s' % mgr.get("_license_", "N/A"),
         classifiers=[
             'Intended Audience :: Developers',
             'Natural Language :: English',
             'Development Status :: 1 - Planning',
-            'License :: OSI Approved :: %s' % mgr.get("_license_", "N/A"),
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',
