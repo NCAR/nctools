@@ -103,8 +103,8 @@ class TaskNcPlotTests(unittest.TestCase):
 
     def test_clone(self):
 
-        argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
-        #argv = ["--clone", "[1,1,1]"]
+        #argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
+        argv = ["--clone", "[1,1,1]"]
         subargv = ["ncread", datafile, "-v", "ua", "--",
                 "ncplot", "-p", "lon[:],lat[:],ua[0,0,:,:]@plot_contourf", "--noshow", "-s",
                    "'cont%d.png'%_pathid_", "-t", "ua.original_name + ua.units"]

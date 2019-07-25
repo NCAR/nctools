@@ -3,7 +3,7 @@
 import os
 import pyloco
 
-from ncutil import traverse, desc_group, GroupProxy
+from nctools.ncutil import traverse, desc_group, GroupProxy
 
 
 class NCDump(pyloco.Task):
@@ -43,7 +43,7 @@ Examples
 
         if hasattr(targs, "path") and targs.path:
             group = GroupProxy(data)
-            outdata = group.dump(targs.path.split("."))
+            outdata = group.dump(targs.path)
 
         else:
             attrs = {"verbose": False}

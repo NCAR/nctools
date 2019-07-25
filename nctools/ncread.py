@@ -4,7 +4,7 @@ import os
 import netCDF4
 import pyloco
 
-from ncutil import traverse, desc_group
+from nctools.ncutil import traverse, desc_group
 
 def normpath(path, type=None):
 

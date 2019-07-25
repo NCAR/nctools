@@ -1,13 +1,20 @@
-#
-#class Manager(object):
-#    pass
-#
-#def collect_attrs(filename, clsname):
-#
-#    class 
-#    with open(file) as f:
-#        l = {"pyloco": __dir__}
-#        exec(f, globals(), lo
+def collect_taskattrs(filename, clsname):
+    import ast
+
+    attrs = {}
+
+    with open(filename) as f:
+        tree = ast.parse(f.read())
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef) and node.name == clsname:
+                for cnode in node.body:
+                    if (isinstance(cnode, ast.Assign) and len(cnode.targets)==1
+                            and cnode.targets[0].id.startswith("_")
+                            and cnode.targets[0].id.endswith("_")
+                            and isinstance(cnode.value, ast.Str)):
+                        attrs[cnode.targets[0].id] = cnode.value.s
+    return attrs
+
 
 def main():
 
@@ -17,15 +24,16 @@ def main():
 
     import sys
     import os
-    from nctools.main import NcTools as mgr
 
-    # TODO: do not import mgr because it causes to import pyloco
-    # TODO: use ast??? with "class NcTools" input?
-
-    mgr = collect_attrs("NcTools")
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    default_tasks = ("matplot", "ncread", "ncplot")
+    here = os.path.abspath(os.path.dirname(__file__))
+    mgr = collect_taskattrs(os.path.join(here, "nctools", "main.py"), "NcTools")
+    default_tasks = {
+            "matplot": None,
+            "ncread" : os.path.join(here, "nctools", "ncread.py"),
+            "ncplot" : os.path.join(here, "nctools", "ncplot.py"),
+            "ncdump" : os.path.join(here, "nctools", "ncdump.py"),
+            "nccalc" : os.path.join(here, "nctools", "nccalc.py"),
+    }
 
     class PostCommand(object):
 
@@ -33,23 +41,43 @@ def main():
             import pyloco
             fout = open(os.devnull,"w"); ferr = open(os.devnull,"w")
             stdout = sys.stdout; stderr = sys.stderr
-            sys.stdout = fout; sys.stderr = ferr;
-            ret, _ =  pyloco.perform(task, "-h")
-            sys.stdout = stdout; sys.stderr = stderr
-            return ret == 0
 
-        def _install_task(self, task):
+            try:
+                sys.stdout = fout; sys.stderr = ferr;
+                ret, _ =  pyloco.perform(task, "-h")
+                return ret
+
+            except:
+                return -1
+
+            finally:
+                sys.stdout = stdout; sys.stderr = stderr
+
+
+        def _install_task(self, name, path):
             import pyloco
-            if not self._isinstalled(task):
-                ret, _ = pyloco.perform("install", [task])
+
+            if self._isinstalled(name) != 0:
+
+                if path is None:
+                    print("Installing '%s' task from a remote index." % name)
+                    ret, _ = pyloco.perform("install", [name])
+
+                else:
+                    print("Installing '%s' task from a local file." % name)
+                    ret, _ = pyloco.perform("install", [path])
+
                 if ret != 0:
                     print("'%s' is not installed" % task)
+
+            else:
+                print("'%s' task is already installed." % name)
 
         def _pyloco_install(self):
 
             try:
-                for task in default_tasks:
-                    self._install_task(task)
+                for name, path in default_tasks.items():
+                    self._install_task(name, path)
 
             except Exception as err:
                 print("nctools installation failed: %s" % str(err))
@@ -67,17 +95,17 @@ def main():
             self._pyloco_install()
 
     setup(
-        name=mgr._name_,
-        version=mgr._version_,
-        description=mgr._description_,
-        long_description=mgr._long_description_,
-        author=mgr._author_,
-        author_email=mgr._author_email_,
-        license=mgr._license_,
+        name=mgr.get("_name_"),
+        version=mgr.get("_version_"),
+        description=mgr.get("_description_", "description is not specified."),
+        long_description=mgr.get("_long_description_", "long description is not specified"),
+        author=mgr.get("_author_", "author is not specified"),
+        author_email=mgr.get("_author_email_", "author email is not specified"),
+        license=mgr.get("_license_", "license is not specified"),
         packages=find_packages(),
         test_suite="tests.nctools_unittest_suite",
-        install_requires=["pyloco"],
-        url=mgr._url_,
+        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"],
+        url=mgr.get("_url_", "url is not specified"),
         entry_points={
             'console_scripts': [
                 'nctools = nctools.__main__:main'
@@ -91,7 +119,7 @@ def main():
             'Intended Audience :: Developers',
             'Natural Language :: English',
             'Development Status :: 1 - Planning',
-            'License :: OSI Approved :: %s' % mgr._license_,
+            'License :: OSI Approved :: %s' % mgr.get("_license_", "N/A"),
             'Operating System :: OS Independent',
             'Programming Language :: Python :: 2',
             'Programming Language :: Python :: 2.7',

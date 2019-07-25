@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy
 
 MAXWIDTH = 50
 
@@ -32,6 +33,18 @@ def _pack(lines):
             packed.append(text)
 
     return "\n".join(packed)
+
+
+def _split(namepath):
+
+    split1 = namepath.split(".", 1)
+    split2 = split1[0].split("[", 1)
+
+    remained = ("["+split2[1]) if len(split2)==2 else ""
+    remained = remained + split1[1] if len(split1)==2 else remained
+
+    return split2[0].strip(), remained
+
 
 def traverse(group, indata, outdata, parent_group=None,
              F1=None, F2=None, F3=None, F4=None):
@@ -146,40 +159,55 @@ class ProxyBase(object):
 
     def dump(self, namepath):
 
+        namepath = namepath.strip()
+
         if namepath:
-            name = namepath[0]
+            name, remained = _split(namepath)
             obj = getattr(self, name, None)
 
             if obj is None:
                 print("ERROR: could not find any item specified by '%s'." % ".".join(namepath))
 
             elif isinstance(obj, ProxyBase):
-                namepath.pop(0)
-                return obj.dump(namepath)
+                obj = obj.dump(remained)
         
-            else:
-                return str(obj)
+            elif isinstance(obj, (numpy.ndarray, numpy.generic)):
+                if remained:
+                    if not remained.startswith("["):
+                        remained = "." + remained
+
+                obj = eval("obj"+remained, None, {"obj": obj})
+
+            return str(obj)
         else:
             return str(self)
 
 
 class VarProxy(ProxyBase):
 
+#    def __getitem__(self, key):
+#
+#        if key == slice(None, None, None):
+#            return self._data["data"]
+#
+#        else:
+#            return self._data["data"][key]
+#
+#    def __setitem__(self, key, value):
+#
+#        if key == slice(None, None, None):
+#            self._data["data"] = value
+#
+#        else:
+#            raise Exception("Unsupported slicing")
+
     def __getitem__(self, key):
 
-        if key == slice(None, None, None):
-            return self._data["data"]
-
-        else:
-            return self._data["data"][key]
+        return self._data["data"][key]
 
     def __setitem__(self, key, value):
 
-        if key == slice(None, None, None):
-            self._data["data"] = value
-
-        else:
-            raise Exception("Unsupported slicing")
+        self._data["data"][key] = value
 
     def __str__(self):
 
@@ -200,21 +228,29 @@ class VarProxy(ProxyBase):
         
 class DimProxy(ProxyBase):
 
+#    def __getitem__(self, key):
+#
+#        if key == slice(None, None, None):
+#            return self._data["variable"]["data"]
+#
+#        else:
+#            return self._data["variable"]["data"][key]
+#
+#    def __setitem__(self, key, value):
+#
+#        if key == slice(None, None, None):
+#            self._data["variable"]["data"] = value
+#
+#        else:
+#            raise Exception("Unsupported slicing")
+
     def __getitem__(self, key):
 
-        if key == slice(None, None, None):
-            return self._data["variable"]["data"]
-
-        else:
-            return self._data["variable"]["data"][key]
+        return self._data["variable"]["data"][key]
 
     def __setitem__(self, key, value):
 
-        if key == slice(None, None, None):
-            self._data["variable"]["data"] = value
-
-        else:
-            raise Exception("Unsupported slicing")
+        self._data["variable"]["data"][key] = value
 
     def __str__(self):
 
