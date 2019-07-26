@@ -102,6 +102,6 @@ install: clean ## install the package to the active Python's site-packages
 	python setup.py install
 
 dev-install: clean ## install the package locally
-	python setup.py develop
+	python setup.py develop -f https:/test.pypi.org/simple/ -i https://pypi.org/simple/
 	#python setup.py develop --user
 

@@ -44,6 +44,7 @@ Examples
         if hasattr(targs, "path") and targs.path:
             #group = GroupProxy(data)
             self._env.update(ncdproxy(data))
+            import pdb; pdb.set_trace()
             outdata = str(eval(targs.path, self._env))
 
         else:

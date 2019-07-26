@@ -10,21 +10,54 @@ def collect_taskattrs(filename, clsname):
                 for cnode in node.body:
                     if (isinstance(cnode, ast.Assign) and len(cnode.targets)==1
                             and cnode.targets[0].id.startswith("_")
-                            and cnode.targets[0].id.endswith("_")
-                            and isinstance(cnode.value, ast.Str)):
-                        attrs[cnode.targets[0].id] = cnode.value.s
+                            and cnode.targets[0].id.endswith("_")):
+                        if isinstance(cnode.value, ast.Str):
+                            attrs[cnode.targets[0].id] = cnode.value.s
+                        elif isinstance(cnode.value, ast.List):
+                            l = []
+                            for elt in cnode.value.elts:
+                                l.append(elt.s)
+                            attrs[cnode.targets[0].id] = l
+                        else:
+                            print("Warning: unsupported manager attribute type: %s" % cnode.value.__class__.__name__)
     return attrs
 
 
 def main():
 
     from setuptools import setup, find_packages
+    from setuptools.command.develop import develop
+    from setuptools.command.install import install
 
-    import sys
     import os
 
     here = os.path.abspath(os.path.dirname(__file__))
     mgr = collect_taskattrs(os.path.join(here, "nctools", "main.py"), "NcTools")
+
+    class PostCommand(object):
+
+        def _pyloco_install(self):
+            import pyloco
+
+            try:
+                for task in mgr.get("_task_requires_", []):
+                    ret, _ = pyloco.perform("install", [task])
+
+            except Exception as err:
+                print("nctools installation failed: %s" % str(err))
+
+
+    class PostDevelopCommand(PostCommand, develop):
+
+        def run(self):
+            develop.run(self)
+            self._pyloco_install()
+
+    class PostInstallCommand(PostCommand, install):
+
+        def run(self):
+            install.run(self)
+            self._pyloco_install()
 
     setup(
         name=mgr.get("_name_"),
@@ -36,12 +69,16 @@ def main():
         license=mgr.get("_license_", None),
         packages=find_packages(),
         test_suite="tests.nctools_unittest_suite",
-        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"],
+        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"]+mgr.get("_task_requires_", []),
         url=mgr.get("_url_", None),
         entry_points={
             'console_scripts': [
                 'nctools = nctools.__main__:main'
             ]
+        },
+        cmdclass={
+            'develop': PostDevelopCommand,
+            'install': PostInstallCommand,
         },
             #'License :: OSI Approved :: %s' % mgr.get("_license_", "N/A"),
         classifiers=[
