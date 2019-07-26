@@ -169,12 +169,12 @@ class ProxyBase(object):
 
             if obj is None:
                 attrs = [a for a in self._data.keys()]
-                print("ERROR: could not find any item specified by '%s'\n."
+                print("ERROR: could not find any item specified by '%s'.\n"
                       "Possible attributes are: %s" % (name, ", ".join(attrs)))
 
             elif isinstance(obj, ProxyBase):
                 obj = obj.dump(remained)
-        
+
             elif isinstance(obj, (numpy.ndarray, numpy.generic)):
                 if remained:
                     if not remained.startswith("["):
@@ -182,7 +182,15 @@ class ProxyBase(object):
 
                 obj = eval("obj"+remained, None, {"obj": obj})
 
-            return str(obj)
+            elif isinstance(obj, dict):
+                if remained.startswith("["):
+                    obj = eval("obj"+remained, None, {"obj": obj})
+
+                elif remained:
+                    obj = eval("obj['%s']" % remained, None, {"obj": obj})
+
+            return "" if obj is None else str(obj)
+
         else:
             return str(self)
 
@@ -229,7 +237,15 @@ class VarProxy(ProxyBase):
         packed = _pack(lines)
 
         return packed + str(self._data["data"])
-        
+
+    def dump(self, namepath):
+
+        if namepath.startswith("["):
+            return eval("obj"+namepath, None, {"obj": self.data})
+
+        else:
+            return super(VarProxy, self).dump(namepath)
+
 class DimProxy(ProxyBase):
 
 #    def __getitem__(self, key):
@@ -273,6 +289,15 @@ class DimProxy(ProxyBase):
         varobj = VarProxy(self._data["variable"])
 
         return packed + "\n" + str(varobj)
+
+    def dump(self, namepath):
+
+        if namepath.startswith("["):
+            variable = VarProxy(self.variable)
+            return variable.dump(namepath)
+
+        else:
+            return super(DimProxy, self).dump(namepath)
 
 class GroupProxy(ProxyBase):
 

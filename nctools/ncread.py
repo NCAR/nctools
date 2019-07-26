@@ -29,15 +29,15 @@ Examples
 ---------
 """
     _name_ = "ncread"
-    _version_ = "0.1.6"
+    _version_ = "0.1.8"
     _install_requires = ["netCDF4"]
 
     def __init__(self, parent):
 
         self.add_data_argument("data", required=True, help="netcdf data file")
 
-#        self.add_option_argument("-l", "--list", action="store_true",
-#                help="list variables in a netcdf file")
+        self.add_option_argument("-l", "--list", action="store_true",
+                help="list variables in a netcdf file")
         self.add_option_argument("-p", "--path", action="append",
                 help="data path")
 
@@ -173,13 +173,14 @@ Examples
             path = [normpath(s, type=None) for s in targs.path]
             attrs = {"verbose": True, "only": path}
             traverse(outdata, attrs, {}, F1=desc_group)
-#
-#        elif targs.list:
-#            attrs = {"verbose": False}
-#            traverse(outdata, attrs, {}, F1=desc_group)
 
-        else:
+        elif targs.list:
             attrs = {"verbose": False}
             traverse(outdata, attrs, {}, F1=desc_group)
+#
+#        else:
+#            print("'%s' is successfully loaded. Please use '-l' option for listing or '-p' for inspection.")
+            #attrs = {"verbose": False}
+            #traverse(outdata, attrs, {}, F1=desc_group)
 
         self.add_forward(data=outdata)
