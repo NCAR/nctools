@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys 
 import os 
 import numpy
 import pyloco
@@ -18,7 +19,7 @@ Examples
 ---------
 """
     _name_ = "nccalc"
-    _version_ = "0.1.1"
+    _version_ = "0.1.3"
 
     def __init__(self, parent):
 
@@ -62,7 +63,7 @@ Examples
                     evaluated[name] = self._env[name]
 
         else:
-            print("ERROR: No expression is specified by '-e' option")
+            print("ERROR: No numpy expression is specified by '-c' option")
             sys.exit(-1)
 
         self.add_forward(data=evaluated)
