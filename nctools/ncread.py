@@ -29,19 +29,17 @@ Examples
 ---------
 """
     _name_ = "ncread"
-    _version_ = "0.1.2"
+    _version_ = "0.1.3"
     _install_requires = ["netCDF4"]
 
     def __init__(self, parent):
 
         self.add_data_argument("data", required=True, help="netcdf data file")
 
-        self.add_option_argument("-v", "--variable", action="append",
-                type=str, help="a variable name to collect", metavar="name")
         self.add_option_argument("-l", "--list", action="store_true",
                 help="list variables in a netcdf file")
-        self.add_option_argument("-i", "--info", action="append",
-                help="data information", metavar="name")
+        self.add_option_argument("-p", "--path", action="append",
+                help="data path")
 
         self.register_forward("data",
                 help="netcdf variables in Python dictionary")
@@ -158,9 +156,6 @@ Examples
         outdata = {}
 
         objs = []
-
-        if targs.variable:
-            objs.extend([normpath(s, type="variable") for s in targs.variable])
 
         if targs.info:
             for i in targs.info:

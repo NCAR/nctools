@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
 import numpy
+import pyloco
 
 MAXWIDTH = 50
 
@@ -325,3 +327,21 @@ class GroupProxy(ProxyBase):
         return (packed + "\n" + "\n".join(varlines) + "\n".join(dimlines) +
                 "\n".join(grouplines))
 
+def ncdproxy(ncd):
+
+    env = {}
+
+    for k, g in ncd["groups"].items():
+        env[k] = GroupProxy(g)
+
+    for k, a in ncd.items():
+        if k not in ("vars", "dims", "groups"):
+            env[k] = a
+
+    for k, d in ncd["dims"].items():
+        env[k] = DimProxy(d)
+
+    for k, v in ncd["vars"].items():
+        env[k] = VarProxy(v)
+
+    return env

@@ -2,7 +2,7 @@
 
 import os
 import pyloco
-from nctools.ncutil import GroupProxy, DimProxy, VarProxy
+from nctools.ncutil import (GroupProxy, DimProxy, VarProxy, ncdproxy)
 
 
 class NCPlot(pyloco.taskclass("matplot")):
@@ -14,7 +14,7 @@ Examples
 ---------
 """
     _name_ = "ncplot"
-    _version_ = "0.1.2"
+    _version_ = "0.1.3"
     _install_requires = ["matplot"]
 
     def __init__(self, parent):
@@ -27,48 +27,22 @@ Examples
     def pre_perform(self, targs):
 
         if isinstance(targs.data, str):
-            pathsplit = targs.data.split(":", 1)
-            if len(pathsplit) == 2:
-                filepath, varpath = pathsplit
-
-            else:
-                filepath, varpath = pathsplit[0], None
-
-            if not os.path.isfile(filepath):
-                raise Exception("'%s' is not correct file path." % filepath)
-
-            if varpath:
-                argv = [filepath, "-v", varpath]
-
-            else:
-                argv = [filepath]
-
-            retval, forward = pyloco.perform("ncread", argv=argv)
+            retval, forward = pyloco.perform("ncread", argv=[targs.data])
             targs.data = forward["data"] 
 
-        for k, g in targs.data["groups"].items():
-            self._env[k] = GroupProxy(g)
-
-        for k, a in targs.data.items():
-            if k not in ("vars", "dims", "groups"):
-                self._env[k] = a
-
-        for k, d in targs.data["dims"].items():
-            self._env[k] = DimProxy(d)
-
-        for k, v in targs.data["vars"].items():
-            self._env[k] = VarProxy(v)
+        proxies = ncdproxy(targs.data)
+        self._env.update(proxies)
 
         super(NCPlot, self).pre_perform(targs)
-    
-    @staticmethod
-    def plot_contourf(plotter, opt, targs):
-
-        return NCPlot.plot_contour(plotter, opt, targs, fill=True)
-
-    @staticmethod
-    def plot_contour(plotter, opt, targs, fill=False):
-
-        plotfunc = "contourf" if fill else "contour"
-        opt.context[0] = plotfunc
-        targs.plot.append(opt)
+#    
+#    @staticmethod
+#    def plot_contourf(plotter, opt, targs):
+#
+#        return NCPlot.plot_contour(plotter, opt, targs, fill=True)
+#
+#    @staticmethod
+#    def plot_contour(plotter, opt, targs, fill=False):
+#
+#        plotfunc = "contourf" if fill else "contour"
+#        opt.context[0] = plotfunc
+#        targs.plot.append(opt)

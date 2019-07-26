@@ -27,12 +27,18 @@ def main():
 
     here = os.path.abspath(os.path.dirname(__file__))
     mgr = collect_taskattrs(os.path.join(here, "nctools", "main.py"), "NcTools")
+
+    ncreadpath = os.path.join(here, "nctools", "ncread.py")
+    ncplotpath = os.path.join(here, "nctools", "ncplot.py")
+    ncdumppath = os.path.join(here, "nctools", "ncdump.py")
+    nccalcpath = os.path.join(here, "nctools", "nccalc.py")
+
     default_tasks = {
             "matplot": None,
-            "ncread" : os.path.join(here, "nctools", "ncread.py"),
-            "ncplot" : os.path.join(here, "nctools", "ncplot.py"),
-            "ncdump" : os.path.join(here, "nctools", "ncdump.py"),
-            "nccalc" : os.path.join(here, "nctools", "nccalc.py"),
+            "ncread" : ncreadpath if os.path.isfile(ncreadpath) else None,
+            "ncplot" : ncplotpath if os.path.isfile(ncplotpath) else None,
+            "ncdump" : ncdumppath if os.path.isfile(ncdumppath) else None,
+            "nccalc" : nccalcpath if os.path.isfile(nccalcpath) else None,
     }
 
     class PostCommand(object):
@@ -104,7 +110,7 @@ def main():
         license=mgr.get("_license_", None),
         packages=find_packages(),
         test_suite="tests.nctools_unittest_suite",
-        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"] + list(default_tasks.keys()),
+        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"],
         url=mgr.get("_url_", None),
         entry_points={
             'console_scripts': [
