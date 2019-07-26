@@ -29,7 +29,7 @@ Examples
 ---------
 """
     _name_ = "ncread"
-    _version_ = "0.1.8"
+    _version_ = "0.1.9"
     _install_requires = ["netCDF4"]
 
     def __init__(self, parent):

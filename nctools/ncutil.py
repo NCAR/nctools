@@ -187,12 +187,21 @@ class ProxyBase(object):
                     obj = eval("obj"+remained, None, {"obj": obj})
 
                 elif remained:
-                    obj = eval("obj['%s']" % remained, None, {"obj": obj})
+                    n, r = _split(remained)
 
-            return "" if obj is None else str(obj)
+                    if n and r:
+                        obj = eval("obj['%s']%s" % (n, r), None, {"obj": obj})
+
+                    elif n:
+                        obj = eval("obj['%s']" % n, None, {"obj": obj})
+
+                    elif r:
+                        obj = eval("obj%s" % r, None, {"obj": obj})
+
+            return obj
 
         else:
-            return str(self)
+            return self
 
 
 class VarProxy(ProxyBase):

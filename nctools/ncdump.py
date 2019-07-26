@@ -43,7 +43,7 @@ Examples
 
         if hasattr(targs, "path") and targs.path:
             group = GroupProxy(data)
-            outdata = group.dump(targs.path)
+            outdata = str(group.dump(targs.path))
 
         else:
             attrs = {"verbose": False}
