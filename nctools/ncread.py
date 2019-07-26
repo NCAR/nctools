@@ -177,10 +177,5 @@ Examples
         elif targs.list:
             attrs = {"verbose": False}
             traverse(outdata, attrs, {}, F1=desc_group)
-#
-#        else:
-#            print("'%s' is successfully loaded. Please use '-l' option for listing or '-p' for inspection.")
-            #attrs = {"verbose": False}
-            #traverse(outdata, attrs, {}, F1=desc_group)
 
         self.add_forward(data=outdata)

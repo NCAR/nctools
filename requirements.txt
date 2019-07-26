@@ -1,4 +1,0 @@
-pyloco
-numpy
-netCDF4
-matplotlib
