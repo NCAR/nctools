@@ -5,7 +5,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 class NcTools(pyloco.Manager):
     _name_ = "nctools"
-    _version_ = "0.1.10"
+    _version_ = "0.1.11"
     _description_ = "Composable netCDF utilities for data manipulation and plotting"
     _long_description_ = """nctools : Composable netCDF utilities for data manipulation and plotting
 
