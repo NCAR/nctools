@@ -168,7 +168,9 @@ class ProxyBase(object):
             obj = getattr(self, name, None)
 
             if obj is None:
-                print("ERROR: could not find any item specified by '%s'." % ".".join(namepath))
+                attrs = [a for a in self._data.keys()]
+                print("ERROR: could not find any item specified by '%s'\n."
+                      "Possible attributes are: %s" % (name, ", ".join(attrs)))
 
             elif isinstance(obj, ProxyBase):
                 obj = obj.dump(remained)
