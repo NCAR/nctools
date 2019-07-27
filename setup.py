@@ -19,45 +19,18 @@ def collect_taskattrs(filename, clsname):
                                 l.append(elt.s)
                             attrs[cnode.targets[0].id] = l
                         else:
-                            print("Warning: unsupported manager attribute type: %s" % cnode.value.__class__.__name__)
+                            print("Warning: unsupported manager attribute "
+                                  "type: %s" % cnode.value.__class__.__name__)
     return attrs
 
 
 def main():
 
-    from setuptools import setup, find_packages
-    from setuptools.command.develop import develop
-    from setuptools.command.install import install
-
     import os
+    from setuptools import setup, find_packages
 
     here = os.path.abspath(os.path.dirname(__file__))
     mgr = collect_taskattrs(os.path.join(here, "nctools", "main.py"), "NcTools")
-
-    class PostCommand(object):
-
-        def _pyloco_install(self):
-            import pyloco
-
-            try:
-                for task in mgr.get("_task_requires_", []):
-                    ret, _ = pyloco.perform("install", [task])
-
-            except Exception as err:
-                print("nctools installation failed: %s" % str(err))
-
-
-    class PostDevelopCommand(PostCommand, develop):
-
-        def run(self):
-            develop.run(self)
-            self._pyloco_install()
-
-    class PostInstallCommand(PostCommand, install):
-
-        def run(self):
-            install.run(self)
-            self._pyloco_install()
 
     setup(
         name=mgr.get("_name_"),
@@ -69,16 +42,12 @@ def main():
         license=mgr.get("_license_", None),
         packages=find_packages(),
         test_suite="tests.nctools_unittest_suite",
-        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"]+mgr.get("_task_requires_", []),
+        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"],
         url=mgr.get("_url_", None),
         entry_points={
             'console_scripts': [
                 'nctools = nctools.__main__:main'
             ]
-        },
-        cmdclass={
-            'develop': PostDevelopCommand,
-            'install': PostInstallCommand,
         },
             #'License :: OSI Approved :: %s' % mgr.get("_license_", "N/A"),
         classifiers=[
@@ -101,4 +70,3 @@ if __name__ == '__main__':
     import multiprocessing
     multiprocessing.freeze_support()
     main()
-

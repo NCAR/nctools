@@ -1,11 +1,14 @@
 import os
 import pyloco
 
-here = os.path.abspath(os.path.dirname(__file__))
+#here = os.path.abspath(os.path.dirname(__file__))
+#frame = inspect.stack()[1]
+#module = inspect.getmodule(frame[0])
+#filename = module.__file__
 
 class NcTools(pyloco.Manager):
     _name_ = "nctools"
-    _version_ = "0.1.17"
+    _version_ = "0.1.18"
     _description_ = "Composable netCDF utilities for data manipulation and plotting"
     _long_description_ = """nctools : Composable netCDF utilities for data manipulation and plotting
 
@@ -15,7 +18,8 @@ class NcTools(pyloco.Manager):
     _author_email_ ='youngsun@ucar.edu'
     _license_ ='MIT'
     _url_='https://github.com/NCAR/nctools'
-    _task_requires_ = ["matplot", "ncread", "ncdump", "nccalc", "ncplot"]
+    pyloco.Manager.load_default_task("ncread.py", "ncdump.py", "nccalc.py", "ncplot.py")
  
+
 def main(argv=None):
     return pyloco.main.main(argv=argv, manager=NcTools)
