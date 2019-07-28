@@ -37,15 +37,15 @@ def _pack(lines):
     return "\n".join(packed)
 
 
-def _split(namepath):
-
-    split1 = namepath.split(".", 1)
-    split2 = split1[0].split("[", 1)
-
-    remained = ("["+split2[1]) if len(split2)==2 else ""
-    remained = remained + split1[1] if len(split1)==2 else remained
-
-    return split2[0].strip(), remained
+#def _split(namepath):
+#
+#    split1 = namepath.split(".", 1)
+#    split2 = split1[0].split("[", 1)
+#
+#    remained = ("["+split2[1]) if len(split2)==2 else ""
+#    remained = remained + split1[1] if len(split1)==2 else remained
+#
+#    return split2[0].strip(), remained
 
 
 def traverse(group, indata, outdata, parent_group=None,
@@ -61,36 +61,36 @@ def traverse(group, indata, outdata, parent_group=None,
     if F4: F4(group, indata, outdata, parent_group)
 
 
-def get_var(group, name):
-
-    def _get_variables(group, varpaths, outdata, parent_group):
-
-        if varpaths:
-            for vname, var in group["vars"].items():
-                vpath = group["path"] + vname
-                if vpath in varpaths:
-                    outdata[vpath] = var
-
-    outvar = normpath(name)
-    indata, outdata = [outvar], {}
-    traverse(group, indata, outdata, F1=_get_variables)
-    return outdata[outvar]
-
-
-def get_dim(group, name):
-
-    def _get_dimension(group, dimpaths, outdata, parent_group):
-
-        if dimpaths:
-            for vname, var in group["dims"].items():
-                vpath = group["path"] + vname
-                if vpath in dimpaths:
-                    outdata[vpath] = var
-
-    outdim = normpath(name)
-    indata, outdata = [outdim], {}
-    traverse(group, indata, outdata, F1=_get_dimension)
-    return outdata[outdim]
+#def get_var(group, name):
+#
+#    def _get_variables(group, varpaths, outdata, parent_group):
+#
+#        if varpaths:
+#            for vname, var in group["vars"].items():
+#                vpath = group["path"] + vname
+#                if vpath in varpaths:
+#                    outdata[vpath] = var
+#
+#    outvar = normpath(name)
+#    indata, outdata = [outvar], {}
+#    traverse(group, indata, outdata, F1=_get_variables)
+#    return outdata[outvar]
+#
+#
+#def get_dim(group, name):
+#
+#    def _get_dimension(group, dimpaths, outdata, parent_group):
+#
+#        if dimpaths:
+#            for vname, var in group["dims"].items():
+#                vpath = group["path"] + vname
+#                if vpath in dimpaths:
+#                    outdata[vpath] = var
+#
+#    outdim = normpath(name)
+#    indata, outdata = [outdim], {}
+#    traverse(group, indata, outdata, F1=_get_dimension)
+#    return outdata[outdim]
 
 def desc_group(group, indata, outdata, parent_group):
 
@@ -159,49 +159,52 @@ class ProxyBase(object):
         raise AttributeError("'%s' object has no attribute '%s'" %
                              (self.__class__.__name__, attr))
 
-    def dump(self, namepath):
+    def get_rawdata(self):
+        return self._data
 
-        namepath = namepath.strip()
-
-        if namepath:
-            name, remained = _split(namepath)
-            obj = getattr(self, name, None)
-
-            if obj is None:
-                attrs = [a for a in self._data.keys()]
-                print("ERROR: could not find any item specified by '%s'.\n"
-                      "Possible attributes are: %s" % (name, ", ".join(attrs)))
-
-            elif isinstance(obj, ProxyBase):
-                obj = obj.dump(remained)
-
-            elif isinstance(obj, (numpy.ndarray, numpy.generic)):
-                if remained:
-                    if not remained.startswith("["):
-                        remained = "." + remained
-
-                obj = eval("obj"+remained, None, {"obj": obj})
-
-            elif isinstance(obj, dict):
-                if remained.startswith("["):
-                    obj = eval("obj"+remained, None, {"obj": obj})
-
-                elif remained:
-                    n, r = _split(remained)
-
-                    if n and r:
-                        obj = eval("obj['%s']%s" % (n, r), None, {"obj": obj})
-
-                    elif n:
-                        obj = eval("obj['%s']" % n, None, {"obj": obj})
-
-                    elif r:
-                        obj = eval("obj%s" % r, None, {"obj": obj})
-
-            return obj
-
-        else:
-            return self
+#    def dump(self, namepath):
+#
+#        namepath = namepath.strip()
+#
+#        if namepath:
+#            name, remained = _split(namepath)
+#            obj = getattr(self, name, None)
+#
+#            if obj is None:
+#                attrs = [a for a in self._data.keys()]
+#                print("ERROR: could not find any item specified by '%s'.\n"
+#                      "Possible attributes are: %s" % (name, ", ".join(attrs)))
+#
+#            elif isinstance(obj, ProxyBase):
+#                obj = obj.dump(remained)
+#
+#            elif isinstance(obj, (numpy.ndarray, numpy.generic)):
+#                if remained:
+#                    if not remained.startswith("["):
+#                        remained = "." + remained
+#
+#                obj = eval("obj"+remained, None, {"obj": obj})
+#
+#            elif isinstance(obj, dict):
+#                if remained.startswith("["):
+#                    obj = eval("obj"+remained, None, {"obj": obj})
+#
+#                elif remained:
+#                    n, r = _split(remained)
+#
+#                    if n and r:
+#                        obj = eval("obj['%s']%s" % (n, r), None, {"obj": obj})
+#
+#                    elif n:
+#                        obj = eval("obj['%s']" % n, None, {"obj": obj})
+#
+#                    elif r:
+#                        obj = eval("obj%s" % r, None, {"obj": obj})
+#
+#            return obj
+#
+#        else:
+#            return self
 
 
 class VarProxy(ProxyBase):
@@ -247,13 +250,13 @@ class VarProxy(ProxyBase):
 
         return packed + str(self._data["data"])
 
-    def dump(self, namepath):
-
-        if namepath.startswith("["):
-            return eval("obj"+namepath, None, {"obj": self.data})
-
-        else:
-            return super(VarProxy, self).dump(namepath)
+#    def dump(self, namepath):
+#
+#        if namepath.startswith("["):
+#            return eval("obj"+namepath, None, {"obj": self.data})
+#
+#        else:
+#            return super(VarProxy, self).dump(namepath)
 
 class DimProxy(ProxyBase):
 
@@ -299,14 +302,14 @@ class DimProxy(ProxyBase):
 
         return packed + "\n" + str(varobj)
 
-    def dump(self, namepath):
-
-        if namepath.startswith("["):
-            variable = VarProxy(self.variable)
-            return variable.dump(namepath)
-
-        else:
-            return super(DimProxy, self).dump(namepath)
+#    def dump(self, namepath):
+#
+#        if namepath.startswith("["):
+#            variable = VarProxy(self.variable)
+#            return variable.dump(namepath)
+#
+#        else:
+#            return super(DimProxy, self).dump(namepath)
 
 class GroupProxy(ProxyBase):
 
@@ -372,7 +375,11 @@ def ncdproxy(ncd):
 
     for k, a in ncd.items():
         if k not in ("vars", "dims", "groups"):
-            env[k] = a
+            if k == "ncattrs":
+                for x, y in a.items():
+                    env[x] = y
+            else:
+                env[k] = a
 
     for k, d in ncd["dims"].items():
         env[k] = DimProxy(d)

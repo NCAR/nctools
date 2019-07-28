@@ -105,3 +105,8 @@ dev-install: clean ## install the package locally
 	python setup.py develop -f https:/test.pypi.org/simple/ -i https://pypi.org/simple/
 	#python setup.py develop --user
 
+temp:
+	nctools --multiproc 2 \
+	    --clone '(["-p", "lon[:], lat[:], pr[0,:,:]@contourf"], ["-p", "lon[:], lat[:], tas[0,:,:]@contourf"]), mode=argument' \
+	    -- ncplot tests/data/sresa1b_ncar_ccsm3-example.nc --backend WebAgg  --debug
+

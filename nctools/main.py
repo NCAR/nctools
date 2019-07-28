@@ -1,10 +1,4 @@
-import os
 import pyloco
-
-#here = os.path.abspath(os.path.dirname(__file__))
-#frame = inspect.stack()[1]
-#module = inspect.getmodule(frame[0])
-#filename = module.__file__
 
 class NcTools(pyloco.Manager):
     _name_ = "nctools"
@@ -19,7 +13,3 @@ class NcTools(pyloco.Manager):
     _license_ ='MIT'
     _url_='https://github.com/NCAR/nctools'
     pyloco.Manager.load_default_task("ncread.py", "ncdump.py", "nccalc.py", "ncplot.py")
- 
-
-def main(argv=None):
-    return pyloco.main.main(argv=argv, manager=NcTools)

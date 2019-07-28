@@ -28,6 +28,7 @@ Examples
         self.add_option_argument("-c", "--calc", action="append",
                 param_parse=True, help="(E,P) numpy calculation")
         self.add_option_argument("--np", action="store_true", help="use 'np' as 'numpy' abbreviation")
+        self.add_option_argument("-s", "--show", help="output on screen")
 
         self.register_forward("data", help="value")
 
@@ -40,7 +41,7 @@ Examples
             data = targs.data
 
         elif os.path.isfile(targs.data):
-            retval, forward = pyloco.perform("ncread", argv=[targs.data])
+            retval, forward = pyloco.perform("ncread", argv=[targs.data, "-q"])
             data = forward["data"]
 
         if not isinstance(data, dict):
@@ -58,6 +59,10 @@ Examples
 
         if targs.calc:
             for calc in targs.calc:
+                for expr in calc.vargs:
+                    self._env["_"] = eval(expr, self._env)
+                    evaluated["_"] = self._env["_"]
+
                 for name, expr in calc.kwargs.items():
                     self._env[name] = eval(expr, self._env)
                     evaluated[name] = self._env[name]
@@ -65,5 +70,8 @@ Examples
         else:
             print("ERROR: No numpy expression is specified by '-c' option")
             sys.exit(-1)
+
+        if targs.show:
+            print(evaluated)
 
         self.add_forward(data=evaluated)

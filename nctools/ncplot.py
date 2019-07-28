@@ -27,7 +27,7 @@ Examples
     def pre_perform(self, targs):
 
         if isinstance(targs.data, str):
-            retval, forward = pyloco.perform("ncread", argv=[targs.data])
+            retval, forward = pyloco.perform("ncread", argv=[targs.data, "-q"])
             targs.data = forward["data"] 
 
         proxies = ncdproxy(targs.data)

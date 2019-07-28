@@ -40,6 +40,8 @@ Examples
                 help="list variables in a netcdf file")
         self.add_option_argument("-p", "--path", action="append",
                 help="data path")
+        self.add_option_argument("-q", "--quite", action="store_true",
+                help="no output on screen")
 
         self.register_forward("data",
                 help="netcdf variables in Python dictionary")
@@ -169,13 +171,14 @@ Examples
         self.traverse(rootgrp, indata, outdata, F1=self._collect_group,
                       F2=self._get_groupdict)
 
-        if targs.path:
-            path = [normpath(s, type=None) for s in targs.path]
-            attrs = {"verbose": True, "only": path}
-            traverse(outdata, attrs, {}, F1=desc_group)
+        if not targs.quite:
+            if targs.path:
+                path = [normpath(s, type=None) for s in targs.path]
+                attrs = {"verbose": True, "only": path}
+                traverse(outdata, attrs, {}, F1=desc_group)
 
-        elif targs.list:
-            attrs = {"verbose": False}
-            traverse(outdata, attrs, {}, F1=desc_group)
+            elif targs.list:
+                attrs = {"verbose": False}
+                traverse(outdata, attrs, {}, F1=desc_group)
 
         self.add_forward(data=outdata)

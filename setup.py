@@ -46,7 +46,7 @@ def main():
         url=mgr.get("_url_", None),
         entry_points={
             'console_scripts': [
-                'nctools = nctools.__main__:main'
+                'nctools = nctools:main'
             ]
         },
             #'License :: OSI Approved :: %s' % mgr.get("_license_", "N/A"),
