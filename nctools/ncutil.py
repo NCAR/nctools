@@ -37,17 +37,6 @@ def _pack(lines):
     return "\n".join(packed)
 
 
-#def _split(namepath):
-#
-#    split1 = namepath.split(".", 1)
-#    split2 = split1[0].split("[", 1)
-#
-#    remained = ("["+split2[1]) if len(split2)==2 else ""
-#    remained = remained + split1[1] if len(split1)==2 else remained
-#
-#    return split2[0].strip(), remained
-
-
 def traverse(group, indata, outdata, parent_group=None,
              F1=None, F2=None, F3=None, F4=None):
 
@@ -60,37 +49,6 @@ def traverse(group, indata, outdata, parent_group=None,
 
     if F4: F4(group, indata, outdata, parent_group)
 
-
-#def get_var(group, name):
-#
-#    def _get_variables(group, varpaths, outdata, parent_group):
-#
-#        if varpaths:
-#            for vname, var in group["vars"].items():
-#                vpath = group["path"] + vname
-#                if vpath in varpaths:
-#                    outdata[vpath] = var
-#
-#    outvar = normpath(name)
-#    indata, outdata = [outvar], {}
-#    traverse(group, indata, outdata, F1=_get_variables)
-#    return outdata[outvar]
-#
-#
-#def get_dim(group, name):
-#
-#    def _get_dimension(group, dimpaths, outdata, parent_group):
-#
-#        if dimpaths:
-#            for vname, var in group["dims"].items():
-#                vpath = group["path"] + vname
-#                if vpath in dimpaths:
-#                    outdata[vpath] = var
-#
-#    outdim = normpath(name)
-#    indata, outdata = [outdim], {}
-#    traverse(group, indata, outdata, F1=_get_dimension)
-#    return outdata[outdim]
 
 def desc_group(group, indata, outdata, parent_group):
 
@@ -139,9 +97,6 @@ def desc_group(group, indata, outdata, parent_group):
 
     print(_pack(lines))
 
-#def desc_path(group, outdata, parent_group):
-#    print("\n[%s]" % group["path"])
-
 class ProxyBase(object):
 
     def __new__(cls, data):
@@ -162,68 +117,8 @@ class ProxyBase(object):
     def get_rawdata(self):
         return self._data
 
-#    def dump(self, namepath):
-#
-#        namepath = namepath.strip()
-#
-#        if namepath:
-#            name, remained = _split(namepath)
-#            obj = getattr(self, name, None)
-#
-#            if obj is None:
-#                attrs = [a for a in self._data.keys()]
-#                print("ERROR: could not find any item specified by '%s'.\n"
-#                      "Possible attributes are: %s" % (name, ", ".join(attrs)))
-#
-#            elif isinstance(obj, ProxyBase):
-#                obj = obj.dump(remained)
-#
-#            elif isinstance(obj, (numpy.ndarray, numpy.generic)):
-#                if remained:
-#                    if not remained.startswith("["):
-#                        remained = "." + remained
-#
-#                obj = eval("obj"+remained, None, {"obj": obj})
-#
-#            elif isinstance(obj, dict):
-#                if remained.startswith("["):
-#                    obj = eval("obj"+remained, None, {"obj": obj})
-#
-#                elif remained:
-#                    n, r = _split(remained)
-#
-#                    if n and r:
-#                        obj = eval("obj['%s']%s" % (n, r), None, {"obj": obj})
-#
-#                    elif n:
-#                        obj = eval("obj['%s']" % n, None, {"obj": obj})
-#
-#                    elif r:
-#                        obj = eval("obj%s" % r, None, {"obj": obj})
-#
-#            return obj
-#
-#        else:
-#            return self
-
 
 class VarProxy(ProxyBase):
-
-#    def __getitem__(self, key):
-#
-#        if key == slice(None, None, None):
-#            return self._data["data"]
-#
-#        else:
-#            return self._data["data"][key]
-#
-#    def __setitem__(self, key, value):
-#
-#        if key == slice(None, None, None):
-#            self._data["data"] = value
-#
-#        else:
-#            raise Exception("Unsupported slicing")
 
     def __getitem__(self, key):
 
@@ -231,7 +126,10 @@ class VarProxy(ProxyBase):
 
     def __setitem__(self, key, value):
 
-        self._data["data"][key] = value
+        if key != slice(None, None, None):
+            raise Exception("Error: No full array assignment")
+
+        self._data["data"] = value
 
     def __str__(self):
 
@@ -250,31 +148,18 @@ class VarProxy(ProxyBase):
 
         return packed + str(self._data["data"])
 
-#    def dump(self, namepath):
-#
-#        if namepath.startswith("["):
-#            return eval("obj"+namepath, None, {"obj": self.data})
-#
-#        else:
-#            return super(VarProxy, self).dump(namepath)
-
 class DimProxy(ProxyBase):
 
-#    def __getitem__(self, key):
-#
-#        if key == slice(None, None, None):
-#            return self._data["variable"]["data"]
-#
-#        else:
-#            return self._data["variable"]["data"][key]
-#
-#    def __setitem__(self, key, value):
-#
-#        if key == slice(None, None, None):
-#            self._data["variable"]["data"] = value
-#
-#        else:
-#            raise Exception("Unsupported slicing")
+    def __getattr__(self, attr):
+
+        if attr in self._data:
+            return self._data[attr]
+
+        elif attr in self._data["variable"]:
+            return self._data["variable"][attr]
+
+        raise AttributeError("'%s' object has no attribute '%s'" %
+                             (self.__class__.__name__, attr))
 
     def __getitem__(self, key):
 
@@ -282,7 +167,10 @@ class DimProxy(ProxyBase):
 
     def __setitem__(self, key, value):
 
-        self._data["variable"]["data"][key] = value
+        if key != slice(None, None, None):
+            raise Exception("Error: No full array assignment")
+
+        self._data["variable"]["data"] = value
 
     def __str__(self):
 
@@ -301,15 +189,6 @@ class DimProxy(ProxyBase):
         varobj = VarProxy(self._data["variable"])
 
         return packed + "\n" + str(varobj)
-
-#    def dump(self, namepath):
-#
-#        if namepath.startswith("["):
-#            variable = VarProxy(self.variable)
-#            return variable.dump(namepath)
-#
-#        else:
-#            return super(DimProxy, self).dump(namepath)
 
 class GroupProxy(ProxyBase):
 
