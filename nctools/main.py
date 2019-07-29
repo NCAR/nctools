@@ -2,7 +2,7 @@ import pyloco
 
 class NcTools(pyloco.Manager):
     _name_ = "nctools"
-    _version_ = "0.1.20"
+    _version_ = "0.1.21"
     _description_ = "Composable netCDF utilities for data manipulation and plotting"
     _long_description_ = """nctools : Composable netCDF utilities for data manipulation and plotting
 

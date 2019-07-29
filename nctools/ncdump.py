@@ -41,7 +41,7 @@ Examples
         if not isinstance(data, dict):
             raise Exception("Specified input is not correct: %s" % str(targs.data)) 
 
-        outdata = ""
+        outdata = None
 
         if hasattr(targs, "path") and targs.path:
             self._env.update(ncdproxy(data))
@@ -57,5 +57,5 @@ Examples
             traverse(data, attrs, {}, F1=desc_group)
             self.add_forward(data=None)
 
-        if outdata and not targs.quite:
+        if outdata is not None and not targs.quite:
             print(str(outdata))
