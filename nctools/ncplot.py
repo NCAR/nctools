@@ -14,7 +14,7 @@ Examples
 ---------
 """
     _name_ = "ncplot"
-    _version_ = "0.1.1"
+    _version_ = "0.1.2"
     _install_requires = ["matplot"]
 
     def __init__(self, parent):
@@ -27,12 +27,22 @@ Examples
     def pre_perform(self, targs):
 
         if isinstance(targs.data, str):
-            filepath, varpath = targs.data.split(":", 1)
+            pathsplit = targs.data.split(":", 1)
+            if len(pathsplit) == 2:
+                filepath, varpath = pathsplit
+
+            else:
+                filepath, varpath = pathsplit[0], None
 
             if not os.path.isfile(filepath):
                 raise Exception("'%s' is not correct file path." % filepath)
 
-            argv = [filepath, "-v", varpath]
+            if varpath:
+                argv = [filepath, "-v", varpath]
+
+            else:
+                argv = [filepath]
+
             retval, forward = pyloco.perform("ncread", argv=argv)
             targs.data = forward["data"] 
 
