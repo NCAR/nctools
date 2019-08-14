@@ -1,4 +1,4 @@
-"""pyloco netcdf module
+"""nctools ncplot test module
 """
 
 from __future__ import unicode_literals
@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import os
 import unittest
 
-import pyloco
+import nctools
 
 here, myname = os.path.split(__file__)
 datadir = os.path.join(here, "data")
@@ -20,6 +20,7 @@ class TaskNcPlotTests(unittest.TestCase):
 
         super(TaskNcPlotTests, self).__init__(*vargs, **kwargs)
 
+            #"--backend", "WebAgg",
         self.ncplot_argv = [
             "--debug",
             "--noshow",
@@ -41,110 +42,112 @@ class TaskNcPlotTests(unittest.TestCase):
 
         self.assertEqual(retval, 0)
         self.assertTrue(os.path.exists(imgfile))
-
-    def test_inputcontour(self):
-
-        argv = self.ncplot_argv + [
-                "%s:/pr" % datafile,
-                "-p", "lon[:],lat[:],pr[0,:,:]@plot_contour",
-        ]
-
-        retval, forward = pyloco.perform("ncplot", argv)
-        self._default_assert(retval)
-
-    def test_contour(self):
-
-        argv = [datafile, "-v", "/pr"]
-
-        retval, forward = pyloco.perform("ncread", argv)
-
-        self.assertEqual(retval, 0)
-        self.assertIn("data", forward)
-        self.assertIn("dims", forward["data"])
-        self.assertIn("vars", forward["data"])
-        self.assertIn("groups", forward["data"])
-
-
-        argv = self.ncplot_argv + [
-                "-p", "lon[:],lat[:],pr[0,:,:]@plot_contour", "--noshow"
-        ]
-
-        forward = {
-            "data": forward["data"]
-        }
-
-        retval, forward = pyloco.perform("ncplot", argv, forward=forward)
-        self._default_assert(retval)
+#
+#    def test_inputcontour(self):
+#
+#        argv = self.ncplot_argv + [
+#                "%s:/pr" % datafile,
+#                "-p", "lon[:],lat[:],pr[0,:,:]@plot_contour",
+#        ]
+#
+#        retval, forward = nctools.perform("ncplot", argv)
+#        self._default_assert(retval)
+#
+#    def test_contour(self):
+#
+#        argv = [datafile, "-v", "/pr"]
+#
+#        retval, forward = nctools.perform("ncread", argv)
+#
+#        self.assertEqual(retval, 0)
+#        self.assertIn("data", forward)
+#        self.assertIn("dims", forward["data"])
+#        self.assertIn("vars", forward["data"])
+#        self.assertIn("groups", forward["data"])
+#
+#
+#        argv = self.ncplot_argv + [
+#                "-p", "lon[:],lat[:],pr[0,:,:]@plot_contour", "--noshow"
+#        ]
+#
+#        forward = {
+#            "data": forward["data"]
+#        }
+#
+#        retval, forward = nctools.perform("ncplot", argv, forward=forward)
+#        self._default_assert(retval)
 
     def test_contour_rotate(self):
 
-        argv = [datafile, "-v", "/pr"]
-
-        retval, forward = pyloco.perform("ncread", argv)
-
-        self.assertEqual(retval, 0)
-        self.assertIn("data", forward)
-        self.assertIn("dims", forward["data"])
-        self.assertIn("vars", forward["data"])
-        self.assertIn("groups", forward["data"])
-
-
         argv = self.ncplot_argv + [
+                datafile,
                 "--import", "numpy",
                 "-p", "lat[:],lon[:],numpy.swapaxes(pr[0,:,:], 0, 1)@contour", "--noshow"
         ]
 
-        forward = {
-            "data": forward["data"]
-        }
-
-        retval, forward = pyloco.perform("ncplot", argv, forward=forward)
+        retval, forward = nctools.perform("ncplot", argv)
         self._default_assert(retval)
 
-    def test_clone(self):
+    def test_contour_clone(self):
 
-        #argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
-        argv = ["--clone", "[1,1,1]"]
-        subargv = ["ncread", datafile, "-v", "ua", "--",
-                "ncplot", "-p", "lon[:],lat[:],ua[0,0,:,:]@plot_contourf", "--noshow", "-s",
-                   "'cont%d.png'%_pathid_", "-t", "ua.original_name + ua.units"]
+        argv = ["--multiproc", "2", "--clone", "_argument_=(['-p', 'lon[:], lat[:], pr[0,:,:]@contourf', '-s', '\"pr.png\"'], "
+                "['-p', 'lon[:], lat[:], tas[0,:,:]@contourf', '-s', '\"tas.png\"'])"]
 
-        retval, forward = pyloco.perform("", argv, subargv)
+        subargv = ["ncplot", "tests/data/sresa1b_ncar_ccsm3-example.nc"]
 
-        self.assertTrue(os.path.exists("cont0.png"))
-        os.remove("cont0.png")
-        self.assertTrue(os.path.exists("cont1.png"))
-        os.remove("cont1.png")
-        self.assertTrue(os.path.exists("cont2.png"))
-        os.remove("cont2.png")
+        subargv.extend(self.ncplot_argv)
 
-
-    def test_nodim(self):
-
-        argv = [datafile, "-v", "/pr"]
-
-        retval, forward = pyloco.perform("ncread", argv)
-
+        retval, forward = nctools.perform("", argv, subargv)
         self.assertEqual(retval, 0)
-        self.assertIn("data", forward)
-        self.assertIn("dims", forward["data"])
-        self.assertIn("vars", forward["data"])
-        self.assertIn("groups", forward["data"])
+        self.assertTrue(os.path.exists("pr.png"))
+        os.remove("pr.png")
+        self.assertTrue(os.path.exists("tas.png"))
+        os.remove("tas.png")
 
+#    def test_clone(self):
+#
+#        #argv = ["--multiproc", "3,spawn", "--clone", "[1,1,1]"]
+#        argv = ["--clone", "[1,1,1]"]
+#        subargv = ["ncread", datafile, "-v", "ua", "--",
+#                "ncplot", "-p", "lon[:],lat[:],ua[0,0,:,:]@plot_contourf", "--noshow", "-s",
+#                   "'cont%d.png'%_pathid_", "-t", "ua.original_name + ua.units"]
+#
+#        retval, forward = nctools.perform("", argv, subargv)
+#
+#        self.assertTrue(os.path.exists("cont0.png"))
+#        os.remove("cont0.png")
+#        self.assertTrue(os.path.exists("cont1.png"))
+#        os.remove("cont1.png")
+#        self.assertTrue(os.path.exists("cont2.png"))
+#        os.remove("cont2.png")
+#
+#
+#    def test_nodim(self):
+#
+#        argv = [datafile, "-v", "/pr"]
+#
+#        retval, forward = nctools.perform("ncread", argv)
+#
+#        self.assertEqual(retval, 0)
+#        self.assertIn("data", forward)
+#        self.assertIn("dims", forward["data"])
+#        self.assertIn("vars", forward["data"])
+#        self.assertIn("groups", forward["data"])
+#
+#
+#        argv = self.ncplot_argv + [
+#                "-p", "pr[0,:,:]@plot_contour", "--noshow"
+#        ]
+#
+#        forward = {
+#            "data": forward["data"]
+#        }
+#
+#        retval, forward = nctools.perform("ncplot", argv, forward=forward)
+#
+#        self._default_assert(retval)
 
-        argv = self.ncplot_argv + [
-                "-p", "pr[0,:,:]@plot_contour", "--noshow"
-        ]
-
-        forward = {
-            "data": forward["data"]
-        }
-
-        retval, forward = pyloco.perform("ncplot", argv, forward=forward)
-
-        self._default_assert(retval)
-
-#pyloco --multiproc 3 --clone [1,1,1] -- nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -v ua -- nctools/plot/ncplot/ncplot.py --import os -p 'lon,lat,ua@plot_contourf' -s "'cont%d.png'%os.getpid()" -t 'ua.original_name + ua.units' --debug
+#nctools --multiproc 3 --clone [1,1,1] -- nctools/data/ncread.py tests/data/sresa1b_ncar_ccsm3-example.nc --import nctools/core/nctools_util.py -v ua -- nctools/plot/ncplot/ncplot.py --import os -p 'lon,lat,ua@plot_contourf' -s "'cont%d.png'%os.getpid()" -t 'ua.original_name + ua.units' --debug
 
 #    def test_figure(self):
 #
@@ -152,7 +155,7 @@ class TaskNcPlotTests(unittest.TestCase):
 #            "--figure", "'test'@suptitle",
 #        ]
 #
-#        retval, forward = pyloco.perform(matplot, argv)
+#        retval, forward = nctools.perform(matplot, argv)
 #
 #        self._default_assert(retval)
 #
@@ -163,7 +166,7 @@ class TaskNcPlotTests(unittest.TestCase):
 #            "--plot", "[3,1,2]",
 #        ]
 #
-#        retval, forward = pyloco.perform(matplot, argv)
+#        retval, forward = nctools.perform(matplot, argv)
 #
 #        #import pdb; pdb.set_trace()
 #        self._default_assert(retval)
@@ -175,7 +178,7 @@ class TaskNcPlotTests(unittest.TestCase):
 #            "--plot", "[0,1,2], [3,1,2]@bar",
 #        ]
 #
-#        retval, forward = pyloco.perform(matplot, argv)
+#        retval, forward = nctools.perform(matplot, argv)
 #
 #        #import pdb; pdb.set_trace()
 #        self._default_assert(retval)
@@ -189,7 +192,7 @@ class TaskNcPlotTests(unittest.TestCase):
 #            "--xaxis", "['A', 'B', 'C']@ticklabels",
 #        ]
 #
-#        retval, forward = pyloco.perform(matplot, argv)
+#        retval, forward = nctools.perform(matplot, argv)
 #
 #        #import pdb; pdb.set_trace()
 #        self._default_assert(retval)
@@ -205,7 +208,7 @@ class TaskNcPlotTests(unittest.TestCase):
 #            "--save", "'%d.png'%_pathid_",
 #        ]
 #
-#        retval, forward = pyloco.perform("", argv, subargv)
+#        retval, forward = nctools.perform("", argv, subargv)
 #
 #        #import pdb; pdb.set_trace()
 #        self.assertEqual(retval, 0)
@@ -223,7 +226,7 @@ class TaskNcPlotTests(unittest.TestCase):
 #            "-l",
 #        ]
 #
-#        retval, forward = pyloco.perform(matplot, argv)
+#        retval, forward = nctools.perform(matplot, argv)
 #
 #        #import pdb; pdb.set_trace()
 #        self._default_assert(retval)
@@ -239,7 +242,7 @@ class TaskNcPlotTests(unittest.TestCase):
 #            "--plot", "_{data[0]:arg}_['variables']['lat']['data']@plot",
 #        ]
 #
-#        retval, forward = pyloco.perform(matplot, argv)
+#        retval, forward = nctools.perform(matplot, argv)
 #
 #        self._default_assert(retval)
 #

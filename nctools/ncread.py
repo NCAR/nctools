@@ -29,19 +29,19 @@ Examples
 ---------
 """
     _name_ = "ncread"
-    _version_ = "0.1.2"
+    _version_ = "0.1.9"
     _install_requires = ["netCDF4"]
 
     def __init__(self, parent):
 
         self.add_data_argument("data", required=True, help="netcdf data file")
 
-        self.add_option_argument("-v", "--variable", action="append",
-                type=str, help="a variable name to collect", metavar="name")
         self.add_option_argument("-l", "--list", action="store_true",
                 help="list variables in a netcdf file")
-        self.add_option_argument("-i", "--info", action="append",
-                help="data information", metavar="name")
+        self.add_option_argument("-p", "--path", action="append",
+                help="data path")
+        self.add_option_argument("-q", "--quite", action="store_true",
+                help="no output on screen")
 
         self.register_forward("data",
                 help="netcdf variables in Python dictionary")
@@ -159,11 +159,8 @@ Examples
 
         objs = []
 
-        if targs.variable:
-            objs.extend([normpath(s, type="variable") for s in targs.variable])
-
-        if targs.info:
-            for i in targs.info:
+        if targs.path:
+            for i in targs.path:
                 obj = normpath(i, type=None) 
                 if obj not in objs:
                     objs.append(obj)
@@ -174,13 +171,14 @@ Examples
         self.traverse(rootgrp, indata, outdata, F1=self._collect_group,
                       F2=self._get_groupdict)
 
-        if targs.list:
-            attrs = {"verbose": False}
-            traverse(outdata, attrs, {}, F1=desc_group)
+        if not targs.quite:
+            if targs.path:
+                path = [normpath(s, type=None) for s in targs.path]
+                attrs = {"verbose": True, "only": path}
+                traverse(outdata, attrs, {}, F1=desc_group)
 
-        if targs.info:
-            info = [normpath(s, type=None) for s in targs.info]
-            attrs = {"verbose": True, "only": info}
-            traverse(outdata, attrs, {}, F1=desc_group)
+            elif targs.list:
+                attrs = {"verbose": False}
+                traverse(outdata, attrs, {}, F1=desc_group)
 
         self.add_forward(data=outdata)

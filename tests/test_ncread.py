@@ -26,23 +26,23 @@ class TaskNcReadTests(unittest.TestCase):
 
     def test_read(self):
 
-        argv = ["ncread", datafile, "-v", "/pr", "--write-pickle", testppf]
+        argv = ["ncread", datafile, "-p", "pr", "--write-pickle", testppf, "-q"]
 
         retval = nctools.main(argv)
 
         self.assertEqual(retval, 0)
-        self.assertTrue(testppf)
+        self.assertTrue(os.path.exists(testppf))
 
 
     def test_pickle(self):
 
 
-        argv = ["ncread", datafile, "--write-pickle", testppf, "-v", "/pr"]
+        argv = ["ncread", datafile, "--write-pickle", testppf, "-p", "pr", "-q"]
 
         retval = nctools.main(argv)
 
         self.assertEqual(retval, 0)
-        self.assertTrue(testppf)
+        self.assertTrue(os.path.exists(testppf))
 
         argv = ["input", "--read-pickle", testppf, "--assert-input", "'dims' in data[0]"]
         retval = nctools.main(argv)

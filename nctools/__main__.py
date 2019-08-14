@@ -1,4 +1,4 @@
-from nctools.main import main
+from nctools.main import NcTools
 
 if __name__ == "__main__":
-    main()
+    NcTools.main()
