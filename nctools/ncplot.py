@@ -24,24 +24,26 @@ Examples
         self.set_data_argument("data", required=True,
                 help="data input in NetCDF-dictionary format")
 
+        self.add_option_argument("-v", "--variable", action="append", help="variable name")
+
     def pre_perform(self, targs):
 
         if isinstance(targs.data, str):
-            pathsplit = targs.data.split(":", 1)
-            if len(pathsplit) == 2:
-                filepath, varpath = pathsplit
+#            pathsplit = targs.data.split(":", 1)
+#            if len(pathsplit) == 2:
+#                filepath, varpath = pathsplit
+#
+#            else:
+#                filepath, varpath = pathsplit[0], None
 
-            else:
-                filepath, varpath = pathsplit[0], None
+            if not os.path.isfile(targs.data):
+                raise Exception("'%s' is not correct file path." % targs.data)
 
-            if not os.path.isfile(filepath):
-                raise Exception("'%s' is not correct file path." % filepath)
+            argv = [targs.data]
 
-            if varpath:
-                argv = [filepath, "-v", varpath]
-
-            else:
-                argv = [filepath]
+            if targs.variable:
+                for var in targs.variable:
+                    argv.extend(["-v", var])
 
             retval, forward = pyloco.perform("ncread", argv=argv)
             targs.data = forward["data"] 

@@ -42,7 +42,7 @@ def main():
         license=mgr.get("_license_", None),
         packages=find_packages(),
         test_suite="tests.nctools_unittest_suite",
-        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib"],
+        install_requires=["pyloco", "numpy", "netCDF4", "matplotlib", "matplot"], # specify all module used in nctools and nctools default tasks here
         url=mgr.get("_url_", None),
         entry_points={
             'console_scripts': [
